@@ -131,7 +131,7 @@ class ExploreResultsButton extends React.PureComponent {
           metrics: [],
           groupby: [],
           viz_type: 'table',
-          since: '100 years ago',
+          since: '1 weeks ago',
           all_columns: columns.map(c => c.name),
           row_limit: 1000,
         };
