@@ -142,6 +142,7 @@ class ExploreResultsButton extends React.PureComponent {
           groupby: [],
           time_range: 'No filter',
           viz_type: 'table',
+          since: '1 weeks ago',
           all_columns: columns.map(c => c.name),
           row_limit: 1000,
         };
