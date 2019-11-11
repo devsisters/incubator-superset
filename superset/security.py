@@ -142,16 +142,21 @@ class SupersetSecurityManager(SecurityManager):
     ) -> Optional[str]:
         """
         Return the database specific schema permission.
+        Some schema name is wrapped in backticks (`schema_name`), so unwrap backticks for consistency.
 
         :param database: The Superset database or database name
         :param schema: The Superset schema name
         :return: The database specific schema permission
         """
 
-        if schema:
-            return f"[{database}].[{schema}]"
+        if not schema:
+            return None
 
-        return None
+        # If schema name is wrapped in backticks, unwrap.
+        if schema[0] == schema[-1] == '`':
+            return f"[{database}].[{schema[1:-1]}]"
+
+        return f"[{database}].[{schema}]"
 
     def unpack_schema_perm(self, schema_permission: str) -> Tuple[str, str]:
         # [database_name].[schema_name]
@@ -786,6 +791,14 @@ class SupersetSecurityManager(SecurityManager):
         """
 
         link_table = target.__table__  # pylint: disable=no-member
+        # XXX (kimtkyeom): Quite hack.. it requires database information even though database id exists.
+        # But in `after_insert` hook there is no way to retrieve database information.
+        if hasattr(target, "database_id") and not target.database:
+            from superset import db
+            from superset.models.core import Database
+            database = db.session.query(Database).get(target.database_id)
+            target.database = database
+
         if target.perm != target.get_perm():
             connection.execute(
                 link_table.update()
