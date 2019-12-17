@@ -2354,10 +2354,14 @@ class Superset(BaseSupersetView):  # pylint: disable=too-many-public-methods
             df = query.database.get_df(sql, query.schema)
             # TODO(bkyryliuk): add compression=gzip for big files.
             csv = df.to_csv(index=False, **config["CSV_EXPORT"])
-        response = Response(csv, mimetype="text/csv")
+
+        csv_encoded = csv.encode(config["CSV_EXPORT"].get("encoding", "utf-8"))
+        response = Response(csv_encoded, mimetype="text/csv")
+
+        filename_quoted = parse.quote("{}.csv".format(query.name))
         response.headers[
             "Content-Disposition"
-        ] = f"attachment; filename={query.name}.csv"
+        ] = f"attachment; filename={filename_quoted}; filename*=utf-8''{filename_quoted}"
         event_info = {
             "event_type": "data_export",
             "client_id": client_id,
