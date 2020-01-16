@@ -34,6 +34,7 @@ from flask_wtf.form import FlaskForm
 from sqlalchemy import or_
 from werkzeug.exceptions import HTTPException
 from wtforms.fields.core import Field, UnboundField
+from urllib import parse
 
 from superset import conf, db, get_feature_flags, security_manager
 from superset.exceptions import SupersetException, SupersetSecurityException
@@ -88,7 +89,8 @@ def data_payload_response(payload_json, has_error=False):
 
 def generate_download_headers(extension, filename=None):
     filename = filename if filename else datetime.now().strftime("%Y%m%d_%H%M%S")
-    content_disp = "attachment; filename={}.{}".format(filename, extension)
+    filename_quoted = parse.quote(f"{filename}.{extension}")
+    content_disp = f"attachment; filename={filename_quoted}; filename*=utf-8''{filename_quoted}"
     headers = {"Content-Disposition": content_disp}
     return headers
 
@@ -320,7 +322,9 @@ class CsvResponse(Response):
     Override Response to take into account csv encoding from config.py
     """
 
-    charset = conf["CSV_EXPORT"].get("encoding", "utf-8")
+    # XXX (kimtkyeom): charset 에서 utf-8-sig를 지원하지 않는 듯 하다. CSV_EXPORT 설정 값을 안쓰고 utf-8로 현재는 고정해둔 상태
+    # charset = conf["CSV_EXPORT"].get("encoding", "utf-8")
+    charset = 'utf-8'
 
 
 def check_ownership(obj, raise_if_false=True):
