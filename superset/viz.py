@@ -491,7 +491,9 @@ class BaseViz(object):
     def get_csv(self):
         df = self.get_df()
         include_index = not isinstance(df.index, pd.RangeIndex)
-        return df.to_csv(index=include_index, **config.get("CSV_EXPORT"))
+        csv = df.to_csv(index=include_index, **config.get("CSV_EXPORT"))
+        csv_encoded = csv.encode(config["CSV_EXPORT"].get("encoding", "utf-8"))
+        return csv_encoded
 
     def get_data(self, df):
         return df.to_dict(orient="records")
