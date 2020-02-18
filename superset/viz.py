@@ -55,6 +55,7 @@ from superset.utils.core import (
     merge_extra_filters,
     to_adhoc,
 )
+from superset.utils.decorators import stats_timing
 
 config = app.config
 stats_logger = config.get("STATS_LOGGER")
@@ -198,8 +199,11 @@ class BaseViz(object):
             if dttm_col:
                 timestamp_format = dttm_col.python_date_format
 
+        slice_id = self.form_data.get('slice_id', -1)
+
         # The datasource here can be different backend but the interface is common
-        self.results = self.datasource.query(query_obj)
+        with stats_timing(f"test_query {slice_id}, {self.cache_key(query_obj)}", stats_logger):
+            self.results = self.datasource.query(query_obj)
         self.query = self.results.query
         self.status = self.results.status
         self.error_message = self.results.error_message
